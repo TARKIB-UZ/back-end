@@ -7,6 +7,7 @@
     pkgs.nano
     pkgs.docker
     pkgs.git
+    pkgs.openssh
   ];
 
   services.docker.enable=true;
