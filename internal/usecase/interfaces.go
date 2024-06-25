@@ -4,7 +4,7 @@ package usecase
 import (
 	"context"
 
-	"github.com/evrone/go-clean-template/internal/entity"
+	"tarkib.uz/internal/entity"
 )
 
 //go:generate mockgen -source=interfaces.go -destination=./mocks_test.go -package=usecase_test

@@ -8,6 +8,7 @@
     pkgs.docker
     pkgs.git
     pkgs.openssh
+    pkgs.gnumake
   ];
 
   services.docker.enable=true;

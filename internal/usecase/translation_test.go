@@ -7,9 +7,8 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
-
-	"github.com/evrone/go-clean-template/internal/entity"
-	"github.com/evrone/go-clean-template/internal/usecase"
+	"tarkib.uz/internal/entity"
+	"tarkib.uz/internal/usecase"
 )
 
 var errInternalServErr = errors.New("internal server error")

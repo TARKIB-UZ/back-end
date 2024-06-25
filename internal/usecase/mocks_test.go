@@ -8,7 +8,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	entity "github.com/evrone/go-clean-template/internal/entity"
+// Suggested code may be subject to a license. Learn more: ~LicenseLog:3933058416.
+	entity "tarkib.uz/internal/entity"
 	gomock "github.com/golang/mock/gomock"
 )
 

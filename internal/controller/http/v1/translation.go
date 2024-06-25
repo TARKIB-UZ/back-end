@@ -5,9 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/evrone/go-clean-template/internal/entity"
-	"github.com/evrone/go-clean-template/internal/usecase"
-	"github.com/evrone/go-clean-template/pkg/logger"
+	"tarkib.uz/internal/entity"
+	"tarkib.uz/internal/usecase"
+	"tarkib.uz/pkg/logger"
 )
 
 type translationRoutes struct {

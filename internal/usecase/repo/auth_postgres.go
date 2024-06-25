@@ -4,35 +4,32 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/evrone/go-clean-template/internal/entity"
-	"github.com/evrone/go-clean-template/pkg/postgres"
+	"tarkib.uz/internal/entity"
+	"tarkib.uz/pkg/postgres"
 )
 
 const _defaultEntityCap = 64
 
-// TranslationRepo -.
-type TranslationRepo struct {
+type AuthRepo struct {
 	*postgres.Postgres
 }
 
-// New -.
-func New(pg *postgres.Postgres) *TranslationRepo {
-	return &TranslationRepo{pg}
+func NewAuthRepo(pg *postgres.Postgres) *AuthRepo {
+	return &AuthRepo{pg}
 }
 
-// GetHistory -.
-func (r *TranslationRepo) GetHistory(ctx context.Context) ([]entity.Translation, error) {
+func (r *AuthRepo) Register(ctx context.Context) ([]entity.Translation, error) {
 	sql, _, err := r.Builder.
 		Select("source, destination, original, translation").
 		From("history").
 		ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("TranslationRepo - GetHistory - r.Builder: %w", err)
+		return nil, fmt.Errorf("AuthRepo - GetHistory - r.Builder: %w", err)
 	}
 
 	rows, err := r.Pool.Query(ctx, sql)
 	if err != nil {
-		return nil, fmt.Errorf("TranslationRepo - GetHistory - r.Pool.Query: %w", err)
+		return nil, fmt.Errorf("AuthRepo - GetHistory - r.Pool.Query: %w", err)
 	}
 	defer rows.Close()
 
@@ -43,7 +40,7 @@ func (r *TranslationRepo) GetHistory(ctx context.Context) ([]entity.Translation,
 
 		err = rows.Scan(&e.Source, &e.Destination, &e.Original, &e.Translation)
 		if err != nil {
-			return nil, fmt.Errorf("TranslationRepo - GetHistory - rows.Scan: %w", err)
+			return nil, fmt.Errorf("AuthRepo - GetHistory - rows.Scan: %w", err)
 		}
 
 		entities = append(entities, e)
@@ -53,19 +50,19 @@ func (r *TranslationRepo) GetHistory(ctx context.Context) ([]entity.Translation,
 }
 
 // Store -.
-func (r *TranslationRepo) Store(ctx context.Context, t entity.Translation) error {
+func (r *AuthRepo) Store(ctx context.Context, t entity.Translation) error {
 	sql, args, err := r.Builder.
 		Insert("history").
 		Columns("source, destination, original, translation").
 		Values(t.Source, t.Destination, t.Original, t.Translation).
 		ToSql()
 	if err != nil {
-		return fmt.Errorf("TranslationRepo - Store - r.Builder: %w", err)
+		return fmt.Errorf("AuthRepo - Store - r.Builder: %w", err)
 	}
 
 	_, err = r.Pool.Exec(ctx, sql, args...)
 	if err != nil {
-		return fmt.Errorf("TranslationRepo - Store - r.Pool.Exec: %w", err)
+		return fmt.Errorf("AuthRepo - Store - r.Pool.Exec: %w", err)
 	}
 
 	return nil
