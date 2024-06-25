@@ -8,10 +8,11 @@ type User struct {
 	NickName    string
 	Password    string
 	Avatar      string
+	AccessToken      string
 }
 
 type UserForRedis struct {
-	ID string
+	ID          string
 	FirstName   string
 	LastName    string
 	PhoneNumber string
@@ -27,7 +28,7 @@ type VerifyUser struct {
 }
 
 type VerifyUserResponse struct {
-	ID string
+	ID          string
 	FirstName   string
 	LastName    string
 	PhoneNumber string

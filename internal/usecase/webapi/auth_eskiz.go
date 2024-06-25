@@ -16,7 +16,6 @@ type AuthWebAPI struct {
 }
 
 func NewAuthWebAPI(cfg *config.Config) *AuthWebAPI {
-
 	return &AuthWebAPI{
 		cfg: cfg,
 	}
@@ -27,16 +26,22 @@ func (a *AuthWebAPI) SendSMS(ctx context.Context, phoneNumber string, code strin
 	writer := multipart.NewWriter(body)
 
 	_ = writer.WriteField("mobile_phone", phoneNumber)
-	_ = writer.WriteField("message", "Eskiz Test")
+	_ = writer.WriteField("message", "This is test from Eskiz")
 	_ = writer.WriteField("from", "tarkib.uz")
 
 	err := writer.Close()
 	if err != nil {
+		pp.Println(err)
 		return err
 	}
 
-	req, err := http.NewRequest("POST", a.cfg.SMS.APIEndpoint, body)
+	// Ensure the URL does not have surrounding quotes
+	apiEndpoint := a.cfg.SMS.APIEndpoint
+	apiEndpoint = apiEndpoint[1 : len(apiEndpoint)-1] // Remove leading and trailing quotes
+
+	req, err := http.NewRequest("POST", apiEndpoint, body)
 	if err != nil {
+		pp.Println(err)
 		return err
 	}
 
@@ -46,16 +51,18 @@ func (a *AuthWebAPI) SendSMS(ctx context.Context, phoneNumber string, code strin
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
+		pp.Println(err)
 		return err
 	}
 	defer resp.Body.Close()
 
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
+		pp.Println(err)
 		return err
 	}
 
-	pp.Println(respBody)
+	pp.Println(string(respBody))
 
 	return nil
 }

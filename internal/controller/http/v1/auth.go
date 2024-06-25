@@ -22,6 +22,7 @@ func newAuthRoutes(handler *gin.RouterGroup, t usecase.Auth, l logger.Interface)
 	h := handler.Group("/auth")
 	{
 		h.POST("/register", r.register)
+		h.POST("/verify", r.verify)
 	}
 }
 

@@ -1,12 +1,12 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "Using a translation service as an example",
-        "title": "Go Clean Template API",
+        "description": "tarkib.uz",
+        "title": "tarkib.uz back-end",
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:8080",
+    "host": "8080-idx-go-clean-template-1719253883593.cluster-blu4edcrfnajktuztkjzgyxzek.cloudworkstations.dev",
     "basePath": "/v1",
     "paths": {
         "/auth/register": {
@@ -111,19 +111,19 @@
                 "avatar": {
                     "type": "string"
                 },
-                "firstName": {
+                "first_name": {
                     "type": "string"
                 },
-                "lastName": {
+                "last_name": {
                     "type": "string"
                 },
-                "nickName": {
+                "nickname": {
                     "type": "string"
                 },
                 "password": {
                     "type": "string"
                 },
-                "phoneNumber": {
+                "phone_number": {
                     "type": "string"
                 }
             }

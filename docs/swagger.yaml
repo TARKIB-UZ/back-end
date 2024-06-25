@@ -4,15 +4,15 @@ definitions:
     properties:
       avatar:
         type: string
-      firstName:
+      first_name:
         type: string
-      lastName:
+      last_name:
         type: string
-      nickName:
+      nickname:
         type: string
       password:
         type: string
-      phoneNumber:
+      phone_number:
         type: string
     type: object
   models.VerifyUser:
@@ -47,11 +47,11 @@ definitions:
         example: message
         type: string
     type: object
-host: localhost:8080
+host: 8080-idx-go-clean-template-1719253883593.cluster-blu4edcrfnajktuztkjzgyxzek.cloudworkstations.dev
 info:
   contact: {}
-  description: Using a translation service as an example
-  title: Go Clean Template API
+  description: tarkib.uz
+  title: tarkib.uz back-end
   version: "1.0"
 paths:
   /auth/register:

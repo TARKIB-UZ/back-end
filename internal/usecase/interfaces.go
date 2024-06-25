@@ -12,7 +12,7 @@ import (
 type (
 	Auth interface {
 		Register(context.Context, *entity.User) error
-		Verify(context.Context, entity.VerifyUser) (*entity.VerifyUserResponse, error)
+		Verify(context.Context, entity.VerifyUser) (*entity.User, error)
 	}
 
 	AuthRepo interface {

@@ -14,7 +14,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Config error: %s", err)
 	}
-	pp.Println("serving at http://localhost:8080\n")
+	pp.Println("serving at http://localhost:8080")
 
 	// Run
 	app.Run(cfg)

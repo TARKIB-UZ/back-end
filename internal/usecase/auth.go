@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/google/uuid"
+	"github.com/k0kubun/pp"
 	"tarkib.uz/config"
 	"tarkib.uz/internal/entity"
 	tokens "tarkib.uz/pkg/token"
@@ -39,6 +41,8 @@ func (uc *AuthUseCase) Register(ctx context.Context, user *entity.User) error {
 		return err
 	}
 
+	pp.Println(user)
+
 	if IsExist {
 		return errors.New("user already exists")
 	}
@@ -49,6 +53,7 @@ func (uc *AuthUseCase) Register(ctx context.Context, user *entity.User) error {
 
 	code := fmt.Sprintf("%06d", temp)
 
+	userForRedis.ID = uuid.NewString()
 	userForRedis.Avatar = user.Avatar
 	userForRedis.FirstName = user.FirstName
 	userForRedis.LastName = user.LastName
@@ -62,9 +67,9 @@ func (uc *AuthUseCase) Register(ctx context.Context, user *entity.User) error {
 		return err
 	}
 
-	if err := uc.webAPI.SendSMS(ctx, user.PhoneNumber, code); err != nil {
-		return err
-	}
+	// if err := uc.webAPI.SendSMS(ctx, user.PhoneNumber, code); err != nil {
+	// 	return err
+	// }
 
 	status := uc.RedisClient.Set(ctx, user.PhoneNumber, byteData, 10*time.Minute)
 	if status.Err() != nil {
@@ -74,10 +79,9 @@ func (uc *AuthUseCase) Register(ctx context.Context, user *entity.User) error {
 	return nil
 }
 
-func (uc *AuthUseCase) Verify(ctx context.Context, request entity.VerifyUser) (*entity.VerifyUserResponse, error) {
+func (uc *AuthUseCase) Verify(ctx context.Context, request entity.VerifyUser) (*entity.User, error) {
 	var (
-		userForRedis  entity.UserForRedis
-		userWithToken entity.VerifyUserResponse
+		userForRedis entity.UserForRedis
 	)
 	data := uc.RedisClient.Get(ctx, request.PhoneNumber)
 	if data.Err() != nil {
@@ -93,7 +97,13 @@ func (uc *AuthUseCase) Verify(ctx context.Context, request entity.VerifyUser) (*
 		return nil, err
 	}
 
-	if userForRedis.Code != request.Code {
+	//will be uncommented in production
+	// if userForRedis.Code != request.Code {
+	// 	return nil, errors.New("invalid verification code")
+	// }
+
+	//development stage
+	if request.Code != "123456" {
 		return nil, errors.New("invalid verification code")
 	}
 
@@ -111,13 +121,25 @@ func (uc *AuthUseCase) Verify(ctx context.Context, request entity.VerifyUser) (*
 		return nil, err
 	}
 
-	userWithToken.AccessToken = access
-	userWithToken.FirstName = userForRedis.FirstName
-	userWithToken.LastName = userForRedis.LastName
-	userWithToken.NickName = userForRedis.NickName
-	userWithToken.Password = userForRedis.Password
-	userWithToken.PhoneNumber = userForRedis.PhoneNumber
-	userWithToken.Avatar = userForRedis.Avatar
+	uc.repo.Create(ctx, &entity.User{
+		ID:          userForRedis.ID,
+		FirstName:   userForRedis.FirstName,
+		LastName:    userForRedis.LastName,
+		PhoneNumber: userForRedis.PhoneNumber,
+		NickName:    userForRedis.NickName,
+		Password:    userForRedis.Password,
+		Avatar:      userForRedis.Avatar,
+		AccessToken: access,
+	})
 
-	return &userWithToken, nil
+	return &entity.User{
+		ID:          userForRedis.ID,
+		FirstName:   userForRedis.FirstName,
+		LastName:    userForRedis.LastName,
+		PhoneNumber: userForRedis.PhoneNumber,
+		NickName:    userForRedis.NickName,
+		Password:    userForRedis.Password,
+		Avatar:      userForRedis.Avatar,
+		AccessToken: access,
+	}, nil
 }
