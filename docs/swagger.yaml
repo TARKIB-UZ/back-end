@@ -1,42 +1,45 @@
 basePath: /v1
 definitions:
-  entity.Translation:
+  models.RegisterUser:
     properties:
-      destination:
-        example: en
+      avatar:
         type: string
-      original:
-        example: текст для перевода
+      firstName:
         type: string
-      source:
-        example: auto
+      lastName:
         type: string
-      translation:
-        example: text for translation
+      nickName:
+        type: string
+      password:
+        type: string
+      phoneNumber:
         type: string
     type: object
-  v1.doTranslateRequest:
+  models.VerifyUser:
     properties:
-      destination:
-        example: en
+      code:
         type: string
-      original:
-        example: текст для перевода
+      phoneNumber:
         type: string
-      source:
-        example: auto
-        type: string
-    required:
-      - destination
-      - original
-      - source
     type: object
-  v1.historyResponse:
+  models.VerifyUserResponse:
     properties:
-      history:
-        items:
-          $ref: '#/definitions/entity.Translation'
-        type: array
+      accessToken:
+        type: string
+      avatar:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: string
+      lastName:
+        type: string
+      nickName:
+        type: string
+      password:
+        type: string
+      phoneNumber:
+        type: string
     type: object
   v1.response:
     properties:
@@ -51,26 +54,26 @@ info:
   title: Go Clean Template API
   version: "1.0"
 paths:
-  /translation/do-translate:
+  /auth/register:
     post:
       consumes:
-        - application/json
-      description: Translate a text
-      operationId: do-translate
+      - application/json
+      description: Registers a new user
+      operationId: register-user
       parameters:
-        - description: Set up translation
-          in: body
-          name: request
-          required: true
-          schema:
-            $ref: '#/definitions/v1.doTranslateRequest'
+      - description: User credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegisterUser'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entity.Translation'
+            $ref: '#/definitions/models.RegisterUser'
         "400":
           description: Bad Request
           schema:
@@ -79,27 +82,38 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/v1.response'
-      summary: Translate
+      summary: Register
       tags:
-        - translation
-  /translation/history:
-    get:
+      - auth
+  /auth/verify:
+    post:
       consumes:
-        - application/json
-      description: Show all translation history
-      operationId: history
+      - application/json
+      description: After register, user must be verified.
+      operationId: verify-user
+      parameters:
+      - description: One time code and phone number
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.VerifyUser'
       produces:
-        - application/json
+      - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/v1.historyResponse'
+            $ref: '#/definitions/models.VerifyUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.response'
         "500":
           description: Internal Server Error
           schema:
             $ref: '#/definitions/v1.response'
-      summary: Show history
+      summary: Verify
       tags:
-        - translation
+      - auth
 swagger: "2.0"

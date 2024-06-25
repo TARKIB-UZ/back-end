@@ -5,6 +5,8 @@ import (
 	"context"
 	"net/http"
 	"time"
+
+	"github.com/k0kubun/pp"
 )
 
 const (
@@ -49,6 +51,7 @@ func New(handler http.Handler, opts ...Option) *Server {
 func (s *Server) start() {
 	go func() {
 		s.notify <- s.server.ListenAndServe()
+		pp.Println("serving at http://localhost:8080\n")
 		close(s.notify)
 	}()
 }

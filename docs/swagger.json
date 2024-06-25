@@ -9,9 +9,9 @@
     "host": "localhost:8080",
     "basePath": "/v1",
     "paths": {
-        "/translation/do-translate": {
+        "/auth/register": {
             "post": {
-                "description": "Translate a text",
+                "description": "Registers a new user",
                 "consumes": [
                     "application/json"
                 ],
@@ -19,18 +19,18 @@
                     "application/json"
                 ],
                 "tags": [
-                    "translation"
+                    "auth"
                 ],
-                "summary": "Translate",
-                "operationId": "do-translate",
+                "summary": "Register",
+                "operationId": "register-user",
                 "parameters": [
                     {
-                        "description": "Set up translation",
+                        "description": "User credentials",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1.doTranslateRequest"
+                            "$ref": "#/definitions/models.RegisterUser"
                         }
                     }
                 ],
@@ -38,7 +38,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entity.Translation"
+                            "$ref": "#/definitions/models.RegisterUser"
                         }
                     },
                     "400": {
@@ -56,9 +56,9 @@
                 }
             }
         },
-        "/translation/history": {
-            "get": {
-                "description": "Show all translation history",
+        "/auth/verify": {
+            "post": {
+                "description": "After register, user must be verified.",
                 "consumes": [
                     "application/json"
                 ],
@@ -66,15 +66,32 @@
                     "application/json"
                 ],
                 "tags": [
-                    "translation"
+                    "auth"
                 ],
-                "summary": "Show history",
-                "operationId": "history",
+                "summary": "Verify",
+                "operationId": "verify-user",
+                "parameters": [
+                    {
+                        "description": "One time code and phone number",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.VerifyUser"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/v1.historyResponse"
+                            "$ref": "#/definitions/models.VerifyUserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/v1.response"
                         }
                     },
                     "500": {
@@ -88,57 +105,66 @@
         }
     },
     "definitions": {
-        "entity.Translation": {
+        "models.RegisterUser": {
             "type": "object",
             "properties": {
-                "destination": {
-                    "type": "string",
-                    "example": "en"
+                "avatar": {
+                    "type": "string"
                 },
-                "original": {
-                    "type": "string",
-                    "example": "текст для перевода"
+                "firstName": {
+                    "type": "string"
                 },
-                "source": {
-                    "type": "string",
-                    "example": "auto"
+                "lastName": {
+                    "type": "string"
                 },
-                "translation": {
-                    "type": "string",
-                    "example": "text for translation"
+                "nickName": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "phoneNumber": {
+                    "type": "string"
                 }
             }
         },
-        "v1.doTranslateRequest": {
+        "models.VerifyUser": {
             "type": "object",
-            "required": [
-                "destination",
-                "original",
-                "source"
-            ],
             "properties": {
-                "destination": {
-                    "type": "string",
-                    "example": "en"
+                "code": {
+                    "type": "string"
                 },
-                "original": {
-                    "type": "string",
-                    "example": "текст для перевода"
-                },
-                "source": {
-                    "type": "string",
-                    "example": "auto"
+                "phoneNumber": {
+                    "type": "string"
                 }
             }
         },
-        "v1.historyResponse": {
+        "models.VerifyUserResponse": {
             "type": "object",
             "properties": {
-                "history": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.Translation"
-                    }
+                "accessToken": {
+                    "type": "string"
+                },
+                "avatar": {
+                    "type": "string"
+                },
+                "firstName": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lastName": {
+                    "type": "string"
+                },
+                "nickName": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "phoneNumber": {
+                    "type": "string"
                 }
             }
         },

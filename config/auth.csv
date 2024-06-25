@@ -1,0 +1,4 @@
+p, unauthorized, /swagger/*, GET
+p, unauthorized, /swagger/index.html, GET
+p, unauthorized, /swagger/index.html, POST
+p, unauthorized, /v1/admin/login, POST

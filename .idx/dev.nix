@@ -9,6 +9,7 @@
     pkgs.git
     pkgs.openssh
     pkgs.gnumake
+    pkgs.hostname
   ];
 
   services.docker.enable=true;

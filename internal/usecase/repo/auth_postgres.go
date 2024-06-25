@@ -2,13 +2,11 @@ package repo
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/Masterminds/squirrel"
 	"tarkib.uz/internal/entity"
 	"tarkib.uz/pkg/postgres"
 )
-
-const _defaultEntityCap = 64
 
 type AuthRepo struct {
 	*postgres.Postgres
@@ -18,52 +16,41 @@ func NewAuthRepo(pg *postgres.Postgres) *AuthRepo {
 	return &AuthRepo{pg}
 }
 
-func (r *AuthRepo) Register(ctx context.Context) ([]entity.Translation, error) {
-	sql, _, err := r.Builder.
-		Select("source, destination, original, translation").
-		From("history").
+func (a *AuthRepo) Create(ctx context.Context, user *entity.User) (*entity.User, error) {
+	sql, args, err := a.Builder.
+		Insert("users").
+		Columns("first_name, last_name, nick_name, password, avatar").
+		Values(user.FirstName, user.LastName, user.NickName, user.Password, user.Avatar).
 		ToSql()
 	if err != nil {
-		return nil, fmt.Errorf("AuthRepo - GetHistory - r.Builder: %w", err)
+		return nil, err
 	}
 
-	rows, err := r.Pool.Query(ctx, sql)
+	_, err = a.Pool.Exec(ctx, sql, args...)
 	if err != nil {
-		return nil, fmt.Errorf("AuthRepo - GetHistory - r.Pool.Query: %w", err)
-	}
-	defer rows.Close()
-
-	entities := make([]entity.Translation, 0, _defaultEntityCap)
-
-	for rows.Next() {
-		e := entity.Translation{}
-
-		err = rows.Scan(&e.Source, &e.Destination, &e.Original, &e.Translation)
-		if err != nil {
-			return nil, fmt.Errorf("AuthRepo - GetHistory - rows.Scan: %w", err)
-		}
-
-		entities = append(entities, e)
+		return nil, err
 	}
 
-	return entities, nil
+	return user, nil
 }
 
-// Store -.
-func (r *AuthRepo) Store(ctx context.Context, t entity.Translation) error {
-	sql, args, err := r.Builder.
-		Insert("history").
-		Columns("source, destination, original, translation").
-		Values(t.Source, t.Destination, t.Original, t.Translation).
-		ToSql()
+func (a *AuthRepo) CheckUser(ctx context.Context, nickname string) (bool, error) {
+	var count int
+
+	sql, args, err := a.Builder.
+		Select("count(nickname)").
+		From("users").
+		Where(squirrel.Eq{
+			"nickname": nickname,
+		}).ToSql()
 	if err != nil {
-		return fmt.Errorf("AuthRepo - Store - r.Builder: %w", err)
+		return false, err
 	}
 
-	_, err = r.Pool.Exec(ctx, sql, args...)
+	err = a.Pool.QueryRow(ctx, sql, args...).Scan(&count)
 	if err != nil {
-		return fmt.Errorf("AuthRepo - Store - r.Pool.Exec: %w", err)
+		return false, err
 	}
 
-	return nil
+	return count > 0, nil
 }

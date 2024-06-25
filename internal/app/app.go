@@ -17,6 +17,7 @@ import (
 	"tarkib.uz/pkg/httpserver"
 	"tarkib.uz/pkg/logger"
 	"tarkib.uz/pkg/postgres"
+	"tarkib.uz/pkg/redis"
 )
 
 // Run creates objects via constructors.
@@ -30,15 +31,22 @@ func Run(cfg *config.Config) {
 	}
 	defer pg.Close()
 
+	RedisClient, err := redis.NewRedisDB(cfg)
+	if err != nil {
+		l.Fatal(fmt.Errorf("app - Run - redis.New: %w", err))
+	}
+
 	// Use case
-	translationUseCase := usecase.New(
-		repo.New(pg),
-		webapi.New(),
+	authUseCase := usecase.NewAuthUseCase(
+		repo.NewAuthRepo(pg),
+		webapi.NewAuthWebAPI(cfg),
+		cfg,
+		RedisClient,
 	)
 
 	// HTTP Server
 	handler := gin.New()
-	v1.NewRouter(handler, l, translationUseCase)
+	v1.NewRouter(handler, l, authUseCase)
 	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
 	// Waiting signal

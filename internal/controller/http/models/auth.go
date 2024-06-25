@@ -1,24 +1,12 @@
-package entity
+package models
 
-type User struct {
-	ID          string
+type RegisterUser struct {
 	FirstName   string
 	LastName    string
 	PhoneNumber string
 	NickName    string
 	Password    string
 	Avatar      string
-}
-
-type UserForRedis struct {
-	ID string
-	FirstName   string
-	LastName    string
-	PhoneNumber string
-	NickName    string
-	Password    string
-	Avatar      string
-	Code        string
 }
 
 type VerifyUser struct {

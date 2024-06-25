@@ -9,11 +9,13 @@ import (
 type (
 	// Config -.
 	Config struct {
-		App  `yaml:"app"`
-		HTTP `yaml:"http"`
-		Log  `yaml:"logger"`
-		PG   `yaml:"postgres"`
-		RMQ  `yaml:"rabbitmq"`
+		App    `yaml:"app"`
+		HTTP   `yaml:"http"`
+		Log    `yaml:"logger"`
+		PG     `yaml:"postgres"`
+		SMS    `yaml:"eskiz"`
+		Redis  `yaml:"redis"`
+		Casbin `yaml:"casbin"`
 	}
 
 	// App -.
@@ -38,11 +40,23 @@ type (
 		URL     string `env-required:"true"                 env:"PG_URL"`
 	}
 
-	// RMQ -.
-	RMQ struct {
-		ServerExchange string `env-required:"true" yaml:"rpc_server_exchange" env:"RMQ_RPC_SERVER"`
-		ClientExchange string `env-required:"true" yaml:"rpc_client_exchange" env:"RMQ_RPC_CLIENT"`
-		URL            string `env-required:"true"                            env:"RMQ_URL"`
+	SMS struct {
+		Token       string `yaml:"ESKIZ_TOKEN" env:"ESKIZ_TOKEN"`
+		APIEndpoint string `yaml:"eskiz_api_endpoint" env:"ESKIZ_API_ENDPOINT"`
+	}
+
+	Redis struct {
+		Host     string `env-required:"true" yaml:"redis_host" env:"REDIS_HOST"`
+		Port     string `env-required:"true" yaml:"redis_port" env:"REDIS_PORT"`
+		Password string `yaml:"redis_password" env:"REDIS_PASSWORD"`
+		DB       int    `yaml:"redis_db" env:"REDIS_DB"`
+	}
+
+	Casbin struct {
+		ConfigFilePath     string `env-required:"true" yaml:"config_file_path"`
+		CSVFilePath        string `env-required:"true" yaml:"csv_file_path"`
+		SigningKey         string `env-required:"true" yaml:"signing_key"`
+		AccessTokenTimeOut int    `env-required:"true" yaml:"access_token_timeout"`
 	}
 )
 
