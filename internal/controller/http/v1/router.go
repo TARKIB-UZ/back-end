@@ -20,7 +20,6 @@ import (
 // @title       tarkib.uz back-end
 // @description tarkib.uz 
 // @version     1.0
-// @host        8080-idx-go-clean-template-1719253883593.cluster-blu4edcrfnajktuztkjzgyxzek.cloudworkstations.dev
 // @BasePath    /v1
 func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Auth) {
 	// Options

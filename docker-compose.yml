@@ -28,12 +28,10 @@ services:
   #   image: app
   #   environment:
   #     PG_URL: 'postgres://user:pass@postgres:5432/postgres'
-  #     RMQ_URL: 'amqp://guest:guest@rabbitmq:5672/'
   #   ports:
   #     - 8080:8080
   #   depends_on:
   #     - postgres
-  #     - rabbitmq
 
   # integration:
   #   build:

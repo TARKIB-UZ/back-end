@@ -1,5 +1,12 @@
 basePath: /v1
 definitions:
+  models.ForgotPasswordRequest:
+    properties:
+      phone_number:
+        type: string
+    required:
+    - phone_number
+    type: object
   models.RegisterUser:
     properties:
       avatar:
@@ -13,6 +20,24 @@ definitions:
       password:
         type: string
       phone_number:
+        type: string
+    type: object
+  models.ResetPasswordRequest:
+    properties:
+      code:
+        type: string
+      new_password:
+        type: string
+      phone_number:
+        type: string
+    required:
+    - code
+    - new_password
+    - phone_number
+    type: object
+  models.ResetPasswordResponse:
+    properties:
+      message:
         type: string
     type: object
   models.VerifyUser:
@@ -47,13 +72,44 @@ definitions:
         example: message
         type: string
     type: object
-host: 8080-idx-go-clean-template-1719253883593.cluster-blu4edcrfnajktuztkjzgyxzek.cloudworkstations.dev
 info:
   contact: {}
   description: tarkib.uz
   title: tarkib.uz back-end
   version: "1.0"
 paths:
+  /auth/forgot:
+    post:
+      consumes:
+      - application/json
+      description: Initiates the password reset process by sending a reset code to
+        the user's phone number.
+      operationId: forgot-password
+      parameters:
+      - description: Phone number
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.response'
+      summary: Forgot Password
+      tags:
+      - auth
   /auth/register:
     post:
       consumes:
@@ -83,6 +139,38 @@ paths:
           schema:
             $ref: '#/definitions/v1.response'
       summary: Register
+      tags:
+      - auth
+  /auth/reset:
+    post:
+      consumes:
+      - application/json
+      description: Resets the user's password using the provided reset code and new
+        password.
+      operationId: reset-password
+      parameters:
+      - description: Phone number, reset code, and new password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ResetPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResetPasswordResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.response'
+      summary: Reset Password
       tags:
       - auth
   /auth/verify:

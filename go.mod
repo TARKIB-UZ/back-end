@@ -1,6 +1,6 @@
 module tarkib.uz
 
-go 1.21.10
+go 1.21
 
 require (
 	github.com/Eun/go-hit v0.5.23

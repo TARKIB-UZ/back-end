@@ -24,3 +24,17 @@ type VerifyUserResponse struct {
 	Avatar      string
 	AccessToken string
 }
+
+type ForgotPasswordRequest struct {
+	PhoneNumber string `json:"phone_number" binding:"required"`
+}
+
+type ResetPasswordRequest struct {
+	PhoneNumber string `json:"phone_number" binding:"required"`
+	Code        string `json:"code" binding:"required"`
+	NewPassword string `json:"new_password" binding:"required"`
+}
+
+type ResetPasswordResponse struct {
+	Message string `json:"message"`
+}

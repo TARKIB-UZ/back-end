@@ -19,8 +19,8 @@ func NewAuthRepo(pg *postgres.Postgres) *AuthRepo {
 func (a *AuthRepo) Create(ctx context.Context, user *entity.User) (*entity.User, error) {
 	sql, args, err := a.Builder.
 		Insert("users").
-		Columns("first_name, last_name, nick_name, password, avatar").
-		Values(user.FirstName, user.LastName, user.NickName, user.Password, user.Avatar).
+		Columns("id, first_name, last_name, phone_number, nickname, password, avatar").
+		Values(user.ID, user.FirstName, user.LastName, user.PhoneNumber, user.NickName, user.Password, user.Avatar).
 		ToSql()
 	if err != nil {
 		return nil, err
@@ -53,4 +53,23 @@ func (a *AuthRepo) CheckUser(ctx context.Context, nickname string) (bool, error)
 	}
 
 	return count > 0, nil
+}
+
+func (a *AuthRepo) UpdatePassword(ctx context.Context, phoneNumber, newPassword string) error {
+	sql, args, err := a.Builder.
+		Update("users").
+		Set("password", newPassword).
+		Where(squirrel.Eq{
+			"phone_number": phoneNumber,
+		}).ToSql()
+	if err != nil {
+		return err
+	}
+
+	_, err = a.Pool.Exec(ctx, sql, args...)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

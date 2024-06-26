@@ -41,7 +41,6 @@ func (uc *AuthUseCase) Register(ctx context.Context, user *entity.User) error {
 		return err
 	}
 
-	pp.Println(user)
 
 	if IsExist {
 		return errors.New("user already exists")
@@ -67,9 +66,9 @@ func (uc *AuthUseCase) Register(ctx context.Context, user *entity.User) error {
 		return err
 	}
 
-	// if err := uc.webAPI.SendSMS(ctx, user.PhoneNumber, code); err != nil {
-	// 	return err
-	// }
+	if err := uc.webAPI.SendSMSWithAndroid(ctx, user.PhoneNumber, code); err != nil {
+		return err
+	}
 
 	status := uc.RedisClient.Set(ctx, user.PhoneNumber, byteData, 10*time.Minute)
 	if status.Err() != nil {
@@ -121,7 +120,8 @@ func (uc *AuthUseCase) Verify(ctx context.Context, request entity.VerifyUser) (*
 		return nil, err
 	}
 
-	uc.repo.Create(ctx, &entity.User{
+
+	_, err = uc.repo.Create(ctx, &entity.User{
 		ID:          userForRedis.ID,
 		FirstName:   userForRedis.FirstName,
 		LastName:    userForRedis.LastName,
@@ -131,6 +131,9 @@ func (uc *AuthUseCase) Verify(ctx context.Context, request entity.VerifyUser) (*
 		Avatar:      userForRedis.Avatar,
 		AccessToken: access,
 	})
+	if err != nil {
+		return nil, err
+	}
 
 	return &entity.User{
 		ID:          userForRedis.ID,
@@ -142,4 +145,41 @@ func (uc *AuthUseCase) Verify(ctx context.Context, request entity.VerifyUser) (*
 		Avatar:      userForRedis.Avatar,
 		AccessToken: access,
 	}, nil
+}
+
+func (uc *AuthUseCase) ForgotPassword(ctx context.Context, phoneNumber string) error {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	temp := r.Intn(1000000)
+	code := fmt.Sprintf("%06d", temp)
+
+	status := uc.RedisClient.Set(ctx, phoneNumber+"_reset", code, 10*time.Minute)
+	if status.Err() != nil {
+		return status.Err()
+	}
+
+	if err := uc.webAPI.SendSMSWithAndroid(ctx, phoneNumber, code); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (uc *AuthUseCase) ResetPassword(ctx context.Context, phoneNumber, code, newPassword string) error {
+	storedCode := uc.RedisClient.Get(ctx, phoneNumber+"_reset")
+	if storedCode.Err() != nil {
+		return storedCode.Err()
+	}
+
+	if storedCode.Val() != code {
+		return errors.New("invalid reset code")
+	}
+
+	err := uc.repo.UpdatePassword(ctx, phoneNumber, newPassword)
+	if err != nil {
+		return err
+	}
+
+	uc.RedisClient.Del(ctx, phoneNumber+"_reset")
+
+	return nil
 }

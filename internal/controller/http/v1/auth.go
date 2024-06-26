@@ -23,6 +23,8 @@ func newAuthRoutes(handler *gin.RouterGroup, t usecase.Auth, l logger.Interface)
 	{
 		h.POST("/register", r.register)
 		h.POST("/verify", r.verify)
+		h.POST("/forgot", r.forgotPassword)
+		h.POST("/reset", r.resetPassword)
 	}
 }
 
@@ -101,4 +103,71 @@ func (r *authRoutes) verify(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, user)
+}
+
+// @Summary     Forgot Password
+// @Description Initiates the password reset process by sending a reset code to the user's phone number.
+// @ID          forgot-password
+// @Tags        auth
+// @Accept      json
+// @Produce     json
+// @Param       request body models.ForgotPasswordRequest true "Phone number"
+// @Success     200 {object} response
+// @Failure     400 {object} response
+// @Failure     500 {object} response
+// @Router      /auth/forgot [post]
+func (r *authRoutes) forgotPassword(c *gin.Context) {
+	var request models.ForgotPasswordRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		r.l.Error(err, "http - v1 - forgotPassword")
+		errorResponse(c, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	err := r.t.ForgotPassword(c.Request.Context(), request.PhoneNumber)
+	if err != nil {
+		r.l.Error(err, "http - v1 - forgotPassword")
+		errorResponse(c, http.StatusInternalServerError, "auth service problems")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Password reset code sent to your phone number.",
+	})
+}
+
+// @Summary     Reset Password
+// @Description Resets the user's password using the provided reset code and new password.
+// @ID          reset-password
+// @Tags        auth
+// @Accept      json
+// @Produce     json
+// @Param       request body models.ResetPasswordRequest true "Phone number, reset code, and new password"
+// @Success     200 {object} models.ResetPasswordResponse
+// @Failure     400 {object} response
+// @Failure     500 {object} response
+// @Router      /auth/reset [post]
+func (r *authRoutes) resetPassword(c *gin.Context) {
+	var request models.ResetPasswordRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		r.l.Error(err, "http - v1 - resetPassword")
+		errorResponse(c, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	err := r.t.ResetPassword(
+		c.Request.Context(),
+		request.PhoneNumber,
+		request.Code,
+		request.NewPassword,
+	)
+	if err != nil {
+		r.l.Error(err, "http - v1 - resetPassword")
+		errorResponse(c, http.StatusInternalServerError, "auth service problems")
+		return
+	}
+
+	c.JSON(http.StatusOK, models.ResetPasswordResponse{
+		Message: "Password reset successfully.",
+	})
 }
