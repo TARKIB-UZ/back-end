@@ -34,14 +34,14 @@ func (a *AuthRepo) Create(ctx context.Context, user *entity.User) (*entity.User,
 	return user, nil
 }
 
-func (a *AuthRepo) CheckUser(ctx context.Context, nickname string) (bool, error) {
+func (a *AuthRepo) CheckField(ctx context.Context, field string, value string) (bool, error) {
 	var count int
 
 	sql, args, err := a.Builder.
 		Select("count(nickname)").
 		From("users").
 		Where(squirrel.Eq{
-			"nickname": nickname,
+			field: value,
 		}).ToSql()
 	if err != nil {
 		return false, err
@@ -72,4 +72,48 @@ func (a *AuthRepo) UpdatePassword(ctx context.Context, phoneNumber, newPassword 
 	}
 
 	return nil
+}
+
+func (a *AuthRepo) GetUserByNickName(ctx context.Context, nickname string) (*entity.User, error) {
+	var user entity.User
+
+	sql, args, err := a.Builder.
+		Select("id, first_name, last_name, phone_number, nickname, password, avatar").
+		From("users").
+		Where(squirrel.Eq{
+			"nickname": nickname,
+		}).ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	err = a.Pool.QueryRow(ctx, sql, args...).
+		Scan(&user.ID, &user.FirstName, &user.LastName, &user.PhoneNumber, &user.NickName, &user.Password, &user.Avatar)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (a *AuthRepo) GetUserByPhoneNumber(ctx context.Context, phoneNumber string) (*entity.User, error) {
+	var user entity.User
+
+	sql, args, err := a.Builder.
+		Select("id, first_name, last_name, phone_number, nickname, password, avatar").
+		From("users").
+		Where(squirrel.Eq{
+			"phone_number": phoneNumber,
+		}).ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	err = a.Pool.QueryRow(ctx, sql, args...).
+		Scan(&user.ID, &user.FirstName, &user.LastName, &user.PhoneNumber, &user.NickName, &user.Password, &user.Avatar)
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 }

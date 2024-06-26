@@ -25,6 +25,7 @@ func newAuthRoutes(handler *gin.RouterGroup, t usecase.Auth, l logger.Interface)
 		h.POST("/verify", r.verify)
 		h.POST("/forgot", r.forgotPassword)
 		h.POST("/reset", r.resetPassword)
+		h.POST("/login", r.login)
 	}
 }
 
@@ -60,9 +61,16 @@ func (r *authRoutes) register(c *gin.Context) {
 		},
 	)
 	if err != nil {
-		r.l.Error(err, "http - v1 - register")
-		errorResponse(c, http.StatusInternalServerError, "auth service problems")
-
+		if err.Error() == "this nickname is already taken" {
+			r.l.Error(err, "http - v1 - register")
+			errorResponse(c, http.StatusBadRequest, "Sorry, this nickname is already taken")
+		} else if err.Error() == "user with this phone number already registered" {
+			r.l.Error(err, "http - v1 - register")
+			errorResponse(c, http.StatusBadRequest, "Sorry, user with this phone number is already registered")
+		} else {
+			r.l.Error(err, "http - v1 - register")
+			errorResponse(c, http.StatusInternalServerError, "auth service problems")
+		}
 		return
 	}
 
@@ -96,10 +104,23 @@ func (r *authRoutes) verify(c *gin.Context) {
 		Code:        request.Code,
 	})
 	if err != nil {
-		r.l.Error(err, "http - v1 - register")
-		errorResponse(c, http.StatusInternalServerError, "auth service problems")
-
-		return
+		if err.Error() == "verification code expired" {
+			r.l.Error("http - v1 - register")
+			errorResponse(c, http.StatusBadRequest, "Verification code expired.")
+			return
+		} else if err.Error() == "redis: nil" {
+			r.l.Error("http - v1 - register")
+			errorResponse(c, http.StatusBadRequest, "You have entered wrong phone number.")
+			return
+		} else if err.Error() == "invalid verification code" {
+			r.l.Error("http - v1 - register")
+			errorResponse(c, http.StatusBadRequest, "Invalid verification code.")
+			return
+		} else {
+			r.l.Error(err, "http - v1 - register")
+			errorResponse(c, http.StatusInternalServerError, "auth service problems")
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, user)
@@ -126,9 +147,15 @@ func (r *authRoutes) forgotPassword(c *gin.Context) {
 
 	err := r.t.ForgotPassword(c.Request.Context(), request.PhoneNumber)
 	if err != nil {
-		r.l.Error(err, "http - v1 - forgotPassword")
-		errorResponse(c, http.StatusInternalServerError, "auth service problems")
-		return
+		if err.Error() == "this phone number not registered in tarkib.uz yet" {
+			r.l.Error(err, "http - v1 - forgotPassword")
+			errorResponse(c, http.StatusBadRequest, "This phone number is not registered in tarkib.uz yet")
+			return
+		} else {
+			r.l.Error(err, "http - v1 - forgotPassword")
+			errorResponse(c, http.StatusInternalServerError, "auth service problems")
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -162,6 +189,10 @@ func (r *authRoutes) resetPassword(c *gin.Context) {
 		request.NewPassword,
 	)
 	if err != nil {
+		if err.Error() == "invalid reset code" {
+			r.l.Error(err, "http - v1 - resetPassword")
+			errorResponse(c, http.StatusBadRequest, "You have entered wrong code.")
+		}
 		r.l.Error(err, "http - v1 - resetPassword")
 		errorResponse(c, http.StatusInternalServerError, "auth service problems")
 		return
@@ -170,4 +201,47 @@ func (r *authRoutes) resetPassword(c *gin.Context) {
 	c.JSON(http.StatusOK, models.ResetPasswordResponse{
 		Message: "Password reset successfully.",
 	})
+}
+
+// @Summary     Login
+// @Description Authenticates a user and returns an access token on successful login.
+// @ID          login-user
+// @Tags  	    auth
+// @Accept      json
+// @Produce     json
+// @Param       request body models.LoginRequest true "Nickname or Phone Number and Password"
+// @Success     200 {object} models.LoginResponse
+// @Failure     400 {object} response
+// @Failure     401 {object} response
+// @Failure     500 {object} response
+// @Router      /auth/login [post]
+func (r *authRoutes) login(c *gin.Context) {
+	var request models.LoginRequest
+	if err := c.ShouldBindJSON(&request); err != nil {
+		r.l.Error(err, "http - v1 - login")
+		errorResponse(c, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	response, err := r.t.Login(c.Request.Context(), entity.LoginRequest{
+		NickName:    request.NickName,
+		PhoneNumber: request.PhoneNumber,
+		Password:    request.Password,
+	})
+	if err != nil {
+		switch err.Error() {
+		case "user not found":
+			r.l.Error(err, "http - v1 - login")
+			errorResponse(c, http.StatusUnauthorized, "Invalid nickname or phone number")
+		case "invalid password":
+			r.l.Error(err, "http - v1 - login")
+			errorResponse(c, http.StatusUnauthorized, "Invalid password")
+		default:
+			r.l.Error(err, "http - v1 - login")
+			errorResponse(c, http.StatusInternalServerError, "auth service problems")
+		}
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
 }

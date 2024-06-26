@@ -4,6 +4,7 @@ package v1
 import (
 	"net/http"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	swaggerFiles "github.com/swaggo/files"
@@ -18,7 +19,7 @@ import (
 // NewRouter -.
 // Swagger spec:
 // @title       tarkib.uz back-end
-// @description tarkib.uz 
+// @description Backend team - Nodirbek, Dostonbek
 // @version     1.0
 // @BasePath    /v1
 func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Auth) {
@@ -26,14 +27,13 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Auth) {
 	handler.Use(gin.Logger())
 	handler.Use(gin.Recovery())
 
-	// handler.Use(cors.New(cors.Config{
-	// 	AllowOrigins:     []string{"http://localhost", "http://anotherdomain.com"}, // Update with your allowed origins
-	// 	AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-	// 	AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
-	// 	ExposeHeaders:    []string{"Content-Length"},
-	// 	AllowCredentials: true,
-	// 	MaxAge:           12 * time.Hour,
-	// }))
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowAllOrigins = true
+	corsConfig.AllowCredentials = true
+	corsConfig.AllowHeaders = []string{"*"}
+	corsConfig.AllowBrowserExtensions = true
+	corsConfig.AllowMethods = []string{"*"}
+	handler.Use(cors.New(corsConfig))
 
 	// Swagger
 	swaggerHandler := ginSwagger.DisablingWrapHandler(swaggerFiles.Handler, "DISABLE_SWAGGER_HTTP_HANDLER")
@@ -49,5 +49,6 @@ func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Auth) {
 	h := handler.Group("/v1")
 	{
 		newAuthRoutes(h, t, l)
+		newFileRoutes(h, l)
 	}
 }

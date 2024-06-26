@@ -3,6 +3,7 @@ package webapi
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -70,14 +71,19 @@ func (a *AuthWebAPI) SendSMS(ctx context.Context, phoneNumber string, code strin
 	return nil
 }
 
-func (a *AuthWebAPI) SendSMSWithAndroid(ctx context.Context, phoneNumber string, code string) error {
+func (a *AuthWebAPI) SendSMSWithAndroid(ctx context.Context, phoneNumber string, code string, smsType string) error {
+	var message string
 	secret := os.Getenv("SECRET_SMS_GATEWAY")
 	device := os.Getenv("SMS_ANDROID_DEVICE_ID")
 	mode := "devices"
 
 	url := "https://sms.uncgateway.com/api/send/sms"
 
-	message := "Your OTP code is: " + code
+	if smsType == "register" {
+		message = "tarkib.uz dan ro'yxatdan o'tish uchun kod: " + code
+	} else if smsType == "verify" {
+		message = "tarkib.uz uchun qayta parol o'rnatish kodi: " + code
+	}
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
@@ -98,7 +104,13 @@ func (a *AuthWebAPI) SendSMSWithAndroid(ctx context.Context, phoneNumber string,
 	}
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 
-	client := &http.Client{}
+	transport := &http.Transport{
+		TLSClientConfig: &tls.Config{
+			MinVersion: tls.VersionTLS12, // Adjust as per your server's TLS configuration
+		},
+	}
+
+	client := &http.Client{Transport: transport}
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println("Error sending request:", err)

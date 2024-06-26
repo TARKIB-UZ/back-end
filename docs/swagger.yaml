@@ -1,11 +1,61 @@
 basePath: /v1
 definitions:
+  entity.User:
+    properties:
+      accessToken:
+        type: string
+      avatar:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: string
+      lastName:
+        type: string
+      nickName:
+        type: string
+      password:
+        type: string
+      phoneNumber:
+        type: string
+    type: object
   models.ForgotPasswordRequest:
     properties:
       phone_number:
         type: string
-    required:
-    - phone_number
+    type: object
+  models.LoginRequest:
+    properties:
+      nickname:
+        type: string
+      password:
+        type: string
+      phone_number:
+        type: string
+    type: object
+  models.LoginResponse:
+    properties:
+      access_token:
+        type: string
+      user:
+        $ref: '#/definitions/models.LoginUser'
+    type: object
+  models.LoginUser:
+    properties:
+      avatar:
+        type: string
+      firstName:
+        type: string
+      id:
+        type: string
+      lastName:
+        type: string
+      nickName:
+        type: string
+      password:
+        type: string
+      phoneNumber:
+        type: string
     type: object
   models.RegisterUser:
     properties:
@@ -30,10 +80,6 @@ definitions:
         type: string
       phone_number:
         type: string
-    required:
-    - code
-    - new_password
-    - phone_number
     type: object
   models.ResetPasswordResponse:
     properties:
@@ -44,27 +90,13 @@ definitions:
     properties:
       code:
         type: string
-      phoneNumber:
+      phone_number:
         type: string
     type: object
   models.VerifyUserResponse:
     properties:
-      accessToken:
-        type: string
-      avatar:
-        type: string
-      firstName:
-        type: string
-      id:
-        type: string
-      lastName:
-        type: string
-      nickName:
-        type: string
-      password:
-        type: string
-      phoneNumber:
-        type: string
+      user:
+        $ref: '#/definitions/entity.User'
     type: object
   v1.response:
     properties:
@@ -74,7 +106,7 @@ definitions:
     type: object
 info:
   contact: {}
-  description: tarkib.uz
+  description: Backend team - Nodirbek, Dostonbek
   title: tarkib.uz back-end
   version: "1.0"
 paths:
@@ -108,6 +140,42 @@ paths:
           schema:
             $ref: '#/definitions/v1.response'
       summary: Forgot Password
+      tags:
+      - auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user and returns an access token on successful
+        login.
+      operationId: login-user
+      parameters:
+      - description: Nickname or Phone Number and Password
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/v1.response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/v1.response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/v1.response'
+      summary: Login
       tags:
       - auth
   /auth/register:
@@ -204,4 +272,33 @@ paths:
       summary: Verify
       tags:
       - auth
+  /file/upload:
+    post:
+      consumes:
+      - application/json
+      description: Api for image upload
+      parameters:
+      - description: Image
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: Image upload
+      tags:
+      - file-upload
 swagger: "2.0"

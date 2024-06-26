@@ -12,10 +12,10 @@ import (
 	"github.com/google/uuid"
 	"tarkib.uz/config"
 	"tarkib.uz/internal/entity"
+	"tarkib.uz/pkg/password"
 	tokens "tarkib.uz/pkg/token"
 )
 
-// AuthUseCase -.
 type AuthUseCase struct {
 	repo        AuthRepo
 	webAPI      AuthWebAPI
@@ -23,7 +23,6 @@ type AuthUseCase struct {
 	RedisClient *redis.Client
 }
 
-// New -.
 func NewAuthUseCase(r AuthRepo, w AuthWebAPI, cfg *config.Config, RedisClient *redis.Client) *AuthUseCase {
 	return &AuthUseCase{
 		repo:        r,
@@ -35,13 +34,22 @@ func NewAuthUseCase(r AuthRepo, w AuthWebAPI, cfg *config.Config, RedisClient *r
 
 func (uc *AuthUseCase) Register(ctx context.Context, user *entity.User) error {
 	var userForRedis entity.UserForRedis
-	IsExist, err := uc.repo.CheckUser(ctx, user.NickName)
+	IsExist, err := uc.repo.CheckField(ctx, "nickname", user.NickName)
 	if err != nil {
 		return err
 	}
 
 	if IsExist {
-		return errors.New("user already exists")
+		return errors.New("this nickname is already taken")
+	}
+
+	IsExist, err = uc.repo.CheckField(ctx, "phone_number", user.PhoneNumber)
+	if err != nil {
+		return err
+	}
+
+	if IsExist {
+		return errors.New("user with this phone number already registered")
 	}
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -64,7 +72,7 @@ func (uc *AuthUseCase) Register(ctx context.Context, user *entity.User) error {
 		return err
 	}
 
-	if err := uc.webAPI.SendSMSWithAndroid(ctx, user.PhoneNumber, code); err != nil {
+	if err := uc.webAPI.SendSMSWithAndroid(ctx, user.PhoneNumber, code, "register"); err != nil {
 		return err
 	}
 
@@ -94,13 +102,7 @@ func (uc *AuthUseCase) Verify(ctx context.Context, request entity.VerifyUser) (*
 		return nil, err
 	}
 
-	//will be uncommented in production
-	// if userForRedis.Code != request.Code {
-	// 	return nil, errors.New("invalid verification code")
-	// }
-
-	//development stage
-	if request.Code != "123456" {
+	if userForRedis.Code != request.Code {
 		return nil, errors.New("invalid verification code")
 	}
 
@@ -118,13 +120,18 @@ func (uc *AuthUseCase) Verify(ctx context.Context, request entity.VerifyUser) (*
 		return nil, err
 	}
 
+	hashedPassword, err := password.HashPassword(userForRedis.Password)
+	if err != nil {
+		return nil, err
+	}
+
 	_, err = uc.repo.Create(ctx, &entity.User{
 		ID:          userForRedis.ID,
 		FirstName:   userForRedis.FirstName,
 		LastName:    userForRedis.LastName,
 		PhoneNumber: userForRedis.PhoneNumber,
 		NickName:    userForRedis.NickName,
-		Password:    userForRedis.Password,
+		Password:    hashedPassword,
 		Avatar:      userForRedis.Avatar,
 		AccessToken: access,
 	})
@@ -145,6 +152,14 @@ func (uc *AuthUseCase) Verify(ctx context.Context, request entity.VerifyUser) (*
 }
 
 func (uc *AuthUseCase) ForgotPassword(ctx context.Context, phoneNumber string) error {
+	IsExists, err := uc.repo.CheckField(ctx, "phone_number", phoneNumber)
+	if err != nil {
+		return err
+	}
+
+	if IsExists {
+		return errors.New("this phone number not registered in tarkib.uz yet")
+	}
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	temp := r.Intn(1000000)
 	code := fmt.Sprintf("%06d", temp)
@@ -154,7 +169,7 @@ func (uc *AuthUseCase) ForgotPassword(ctx context.Context, phoneNumber string) e
 		return status.Err()
 	}
 
-	if err := uc.webAPI.SendSMSWithAndroid(ctx, phoneNumber, code); err != nil {
+	if err := uc.webAPI.SendSMSWithAndroid(ctx, phoneNumber, code, "forgot"); err != nil {
 		return err
 	}
 
@@ -171,7 +186,12 @@ func (uc *AuthUseCase) ResetPassword(ctx context.Context, phoneNumber, code, new
 		return errors.New("invalid reset code")
 	}
 
-	err := uc.repo.UpdatePassword(ctx, phoneNumber, newPassword)
+	hashedPassword, err := password.HashPassword(newPassword)
+	if err != nil {
+		return err
+	}
+
+	err = uc.repo.UpdatePassword(ctx, phoneNumber, hashedPassword)
 	if err != nil {
 		return err
 	}
@@ -179,4 +199,59 @@ func (uc *AuthUseCase) ResetPassword(ctx context.Context, phoneNumber, code, new
 	uc.RedisClient.Del(ctx, phoneNumber+"_reset")
 
 	return nil
+}
+
+func (uc *AuthUseCase) Login(ctx context.Context, req entity.LoginRequest) (*entity.LoginResponse, error) {
+	var user *entity.User
+	var err error
+
+	if req.NickName != "" {
+		user, err = uc.repo.GetUserByNickName(ctx, req.NickName)
+		if err != nil {
+			return nil, errors.New("user not found")
+		}
+	} else {
+		user, err = uc.repo.GetUserByPhoneNumber(ctx, req.PhoneNumber)
+		if err != nil {
+			return nil, errors.New("user not found")
+		}
+	}
+
+	if user == nil {
+		return nil, errors.New("user not found")
+	}
+
+	if !password.CheckPasswordHash(req.Password, user.Password) {
+		return nil, errors.New("invalid password")
+	}
+
+	expDuration := time.Duration(uc.cfg.Casbin.AccessTokenTimeOut) * time.Second
+	expTime := time.Now().Add(expDuration)
+
+	jwtHandler := tokens.JWTHandler{
+		Sub:       user.ID,
+		Iss:       time.Now().String(),
+		Exp:       expTime.String(),
+		Role:      "user",
+		SigninKey: uc.cfg.Casbin.SigningKey,
+		Timeout:   uc.cfg.Casbin.AccessTokenTimeOut,
+	}
+
+	accessToken, _, err := jwtHandler.GenerateAuthJWT()
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate access token: %v", err)
+	}
+
+	return &entity.LoginResponse{
+		AccessToken: accessToken,
+		User: entity.LoginUser{
+			ID:          user.ID,
+			FirstName:   user.FirstName,
+			LastName:    user.LastName,
+			PhoneNumber: user.PhoneNumber,
+			NickName:    user.NickName,
+			Password:    user.Password,
+			Avatar:      user.Avatar,
+		},
+	}, nil
 }

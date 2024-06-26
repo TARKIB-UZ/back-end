@@ -22,6 +22,18 @@ services:
     volumes:
       - redis-data:/data
 
+  minio:
+    image: docker.io/bitnami/minio:2022
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - 'minio-data:/data'
+    environment:
+      - MINIO_ROOT_USER=nodirbek
+      - MINIO_ROOT_PASSWORD=nodirbek
+      - MINIO_DEFAULT_BUCKET=avatars
+
   # app:
   #   build: .
   #   container_name: app
@@ -45,3 +57,4 @@ services:
 volumes:
   pg-data:
   redis-data:
+  minio-data:
