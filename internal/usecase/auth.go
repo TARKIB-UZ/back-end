@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
-	"github.com/k0kubun/pp"
 	"tarkib.uz/config"
 	"tarkib.uz/internal/entity"
 	tokens "tarkib.uz/pkg/token"
@@ -40,7 +39,6 @@ func (uc *AuthUseCase) Register(ctx context.Context, user *entity.User) error {
 	if err != nil {
 		return err
 	}
-
 
 	if IsExist {
 		return errors.New("user already exists")
@@ -119,7 +117,6 @@ func (uc *AuthUseCase) Verify(ctx context.Context, request entity.VerifyUser) (*
 	if err != nil {
 		return nil, err
 	}
-
 
 	_, err = uc.repo.Create(ctx, &entity.User{
 		ID:          userForRedis.ID,
