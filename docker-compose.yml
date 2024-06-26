@@ -1,58 +1,51 @@
 services:
-
   postgres:
     container_name: postgres
     image: postgres
+    networks:
+      - tarkib
     volumes:
       - pg-data:/var/lib/postgresql/data
-    environment:
-      POSTGRES_USER: 'user'
-      POSTGRES_PASSWORD: 'pass'
-      POSTGRES_DB: 'postgres'
+    env_file: .env  
     ports:
       - 5432:5432
 
   redis:
     image: redis:latest
     container_name: redis
+    networks:
+      - tarkib
     ports:
       - "6379:6379"
-    environment:
-      - REDIS_PASSWORD=
+    env_file: .env  
     volumes:
       - redis-data:/data
 
   minio:
     image: docker.io/bitnami/minio:2022
+    networks:
+      - tarkib
     ports:
       - '9000:9000'
       - '9001:9001'
+    env_file: .env
     volumes:
       - 'minio-data:/data'
-    environment:
-      - MINIO_ROOT_USER=nodirbek
-      - MINIO_ROOT_PASSWORD=nodirbek
-      - MINIO_DEFAULT_BUCKET=avatars
 
-  # app:
-  #   build: .
-  #   container_name: app
-  #   image: app
-  #   environment:
-  #     PG_URL: 'postgres://user:pass@postgres:5432/postgres'
-  #   ports:
-  #     - 8080:8080
-  #   depends_on:
-  #     - postgres
+  app:
+    build: .
+    container_name: app
+    networks:
+      - tarkib
+    image: app
+    ports:
+      - 8080:8080
+    env_file: .env  
+    depends_on:
+      - postgres
 
-  # integration:
-  #   build:
-  #     context: .
-  #     dockerfile: integration-test/Dockerfile
-  #   container_name: integration
-  #   image: integration
-  #   depends_on:
-  #     - app
+networks:
+  tarkib:
 
 volumes:
   pg-data:

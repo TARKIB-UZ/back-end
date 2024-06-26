@@ -6,6 +6,7 @@ import (
 	"log"
 	"mime/multipart"
 	"net/http"
+	"os"
 	"path/filepath"
 
 	"github.com/gin-gonic/gin"
@@ -44,7 +45,7 @@ type File struct {
 // @Router 			/file/upload [post]
 func (f *fileRoutes) upload(c *gin.Context) {
 
-	endpoint := "localhost:9000"
+	endpoint := os.Getenv("SERVER_IP")
 	accessKeyID := "nodirbek"
 	secretAccessKey := "nodirbek"
 	bucketName := "avatars"
@@ -93,7 +94,7 @@ func (f *fileRoutes) upload(c *gin.Context) {
 		return
 	}
 
-	minioURL := fmt.Sprintf("http://%s/%s/%s", "localhost:9000", bucketName, objectName)
+	minioURL := fmt.Sprintf("http://%s/%s/%s", endpoint, bucketName, objectName)
 
 	c.JSON(http.StatusOK, gin.H{
 		"url": minioURL,
