@@ -1,7 +1,4 @@
 {
-    "schemes": [
-        "http"
-    ],
     "swagger": "2.0",
     "info": {
         "description": "Backend team - Nodirbek, Dostonbek",
@@ -462,19 +459,9 @@
             }
         }
     },
-    "securityDefinitions": {
-        "ApiKeyAuth": {
-            "type": "apiKey",
-            "name": "X-API-Key",
-            "in": "header"
-        }
-    },
     "security": [
         {
             "BearerAuth": []
-        },
-        {
-            "ApiKeyAuth": []
         }
     ]
 }

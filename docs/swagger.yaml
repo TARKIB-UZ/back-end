@@ -303,14 +303,6 @@ paths:
       summary: Image upload
       tags:
       - file-upload
-schemes:
-- http
 security:
 - BearerAuth: []
-- ApiKeyAuth: []
-securityDefinitions:
-  ApiKeyAuth:
-    in: header
-    name: X-API-Key
-    type: apiKey
 swagger: "2.0"

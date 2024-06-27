@@ -466,19 +466,9 @@ const docTemplate = `{
             }
         }
     },
-    "securityDefinitions": {
-        "ApiKeyAuth": {
-            "type": "apiKey",
-            "name": "X-API-Key",
-            "in": "header"
-        }
-    },
     "security": [
         {
             "BearerAuth": []
-        },
-        {
-            "ApiKeyAuth": []
         }
     ]
 }`
@@ -488,7 +478,7 @@ var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "",
 	BasePath:         "/v1",
-	Schemes:          []string{"http"},
+	Schemes:          []string{},
 	Title:            "tarkib.uz back-end",
 	Description:      "Backend team - Nodirbek, Dostonbek",
 	InfoInstanceName: "swagger",
