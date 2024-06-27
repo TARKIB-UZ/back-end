@@ -21,7 +21,6 @@ import (
 // @title       tarkib.uz back-end
 // @description Backend team - Nodirbek, Dostonbek
 // @version     1.0
-// @host        64.226.79.150:8080
 // @BasePath    /v1
 // @security    BearerAuth
 func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Auth) {
