@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/gin-gonic/gin"
+	"github.com/k0kubun/pp"
 
 	"tarkib.uz/config"
 	v1 "tarkib.uz/internal/controller/http/v1"
@@ -33,6 +34,7 @@ func Run(cfg *config.Config) {
 
 	RedisClient, err := redis.NewRedisDB(cfg)
 	if err != nil {
+		pp.Println(err)
 		l.Fatal(fmt.Errorf("app - Run - redis.New: %w", err))
 	}
 

@@ -136,12 +136,12 @@ func (uc *AuthUseCase) Register(ctx context.Context, user *entity.User) error {
 			return err
 		}
 
-		if err := uc.webAPI.SendSMSWithAndroid(ctx, user.PhoneNumber, code, "register"); err != nil {
+		status := uc.RedisClient.Set(ctx, user.PhoneNumber, byteData, 10*time.Minute)
+		if status.Err() != nil {
 			return err
 		}
 
-		status := uc.RedisClient.Set(ctx, user.PhoneNumber, byteData, 10*time.Minute)
-		if status.Err() != nil {
+		if err := uc.webAPI.SendSMSWithAndroid(ctx, user.PhoneNumber, code, "register"); err != nil {
 			return err
 		}
 
