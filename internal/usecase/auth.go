@@ -1,17 +1,23 @@
 package usecase
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"math/rand"
+	"mime/multipart"
+	"net/http"
+	"os"
 	"time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 	"tarkib.uz/config"
 	"tarkib.uz/internal/entity"
+	avatargenerator "tarkib.uz/pkg/avatar-generator"
 	"tarkib.uz/pkg/password"
 	tokens "tarkib.uz/pkg/token"
 )
@@ -33,7 +39,10 @@ func NewAuthUseCase(r AuthRepo, w AuthWebAPI, cfg *config.Config, RedisClient *r
 }
 
 func (uc *AuthUseCase) Register(ctx context.Context, user *entity.User) error {
-	var userForRedis entity.UserForRedis
+	var (
+		userForRedis entity.UserForRedis
+		imageName    string
+	)
 	IsExist, err := uc.repo.CheckField(ctx, "nickname", user.NickName)
 	if err != nil {
 		return err
@@ -50,6 +59,97 @@ func (uc *AuthUseCase) Register(ctx context.Context, user *entity.User) error {
 
 	if IsExist {
 		return errors.New("user with this phone number already registered")
+	}
+
+	if user.Avatar == "" {
+		imageName = uuid.NewString() + ".png"
+		initials := avatargenerator.GetInitial(user.FirstName, user.LastName)
+		avatargenerator.CreateProfileImage(initials, imageName)
+		file, err := os.Open(imageName)
+		if err != nil {
+			return err
+		}
+
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+
+		part, err := writer.CreateFormFile("file", imageName)
+		if err != nil {
+			fmt.Println("Error writing to form:", err)
+			return err
+		}
+
+		_, err = io.Copy(part, file)
+		if err != nil {
+			fmt.Println("Error copying file:", err)
+			return err
+		}
+
+		err = writer.Close()
+		if err != nil {
+			fmt.Println("Error closing writer:", err)
+			return err
+		}
+
+		req, err := http.NewRequest("POST", os.Getenv("FILE_UPLOAD_URL"), body)
+		if err != nil {
+			fmt.Println("Error creating request:", err)
+			return err
+		}
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			fmt.Println("Error sending request:", err)
+			return err
+		}
+		defer resp.Body.Close()
+
+		var result struct {
+			Url string `json:"url"`
+		}
+		err = json.NewDecoder(resp.Body).Decode(&result)
+		if err != nil {
+			fmt.Println("Error decoding response:", err)
+			return err
+		}
+
+		fmt.Println("Response:", result)
+		userForRedis.Avatar = result.Url
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+		temp := r.Intn(1000000)
+
+		code := fmt.Sprintf("%06d", temp)
+
+		userForRedis.ID = uuid.NewString()
+		userForRedis.FirstName = user.FirstName
+		userForRedis.LastName = user.LastName
+		userForRedis.NickName = user.NickName
+		userForRedis.Password = user.Password
+		userForRedis.PhoneNumber = user.PhoneNumber
+		userForRedis.Code = code
+
+		byteData, err := json.Marshal(userForRedis)
+		if err != nil {
+			return err
+		}
+
+		if err := uc.webAPI.SendSMSWithAndroid(ctx, user.PhoneNumber, code, "register"); err != nil {
+			return err
+		}
+
+		status := uc.RedisClient.Set(ctx, user.PhoneNumber, byteData, 10*time.Minute)
+		if status.Err() != nil {
+			return err
+		}
+
+		if err := os.Remove(imageName); err != nil {
+			return err
+		}
+
+		return nil
 	}
 
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
@@ -82,6 +182,7 @@ func (uc *AuthUseCase) Register(ctx context.Context, user *entity.User) error {
 	}
 
 	return nil
+
 }
 
 func (uc *AuthUseCase) Verify(ctx context.Context, request entity.VerifyUser) (*entity.User, error) {
@@ -108,8 +209,8 @@ func (uc *AuthUseCase) Verify(ctx context.Context, request entity.VerifyUser) (*
 
 	jwtHandler := tokens.JWTHandler{
 		Sub:       userForRedis.ID,
-		Iss:       time.Now().String(),
-		Exp:       time.Now().Add(time.Hour * 168).String(),
+		Iss:       time.Now().UTC().Format(time.RFC3339),
+		Exp:       time.Now().UTC().Add(time.Hour * 168).Format(time.RFC3339),
 		Role:      "user",
 		SigninKey: uc.cfg.Casbin.SigningKey,
 		Timeout:   uc.cfg.Casbin.AccessTokenTimeOut,

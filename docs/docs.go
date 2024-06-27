@@ -29,6 +29,7 @@ const docTemplate = `{
                 ],
                 "summary": "Forgot Password",
                 "operationId": "forgot-password",
+                "deprecated": true,
                 "parameters": [
                     {
                         "description": "Phone number",
@@ -176,6 +177,7 @@ const docTemplate = `{
                 ],
                 "summary": "Reset Password",
                 "operationId": "reset-password",
+                "deprecated": true,
                 "parameters": [
                     {
                         "description": "Phone number, reset code, and new password",
@@ -305,28 +307,28 @@ const docTemplate = `{
         "entity.User": {
             "type": "object",
             "properties": {
-                "accessToken": {
+                "access_token": {
                     "type": "string"
                 },
                 "avatar": {
                     "type": "string"
                 },
-                "firstName": {
+                "first_name": {
                     "type": "string"
                 },
                 "id": {
                     "type": "string"
                 },
-                "lastName": {
+                "last_name": {
                     "type": "string"
                 },
-                "nickName": {
+                "nickname": {
                     "type": "string"
                 },
                 "password": {
                     "type": "string"
                 },
-                "phoneNumber": {
+                "phone_number": {
                     "type": "string"
                 }
             }
@@ -463,7 +465,22 @@ const docTemplate = `{
                 }
             }
         }
-    }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "X-API-Key",
+            "in": "header"
+        }
+    },
+    "security": [
+        {
+            "BearerAuth": []
+        },
+        {
+            "ApiKeyAuth": []
+        }
+    ]
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
@@ -471,7 +488,7 @@ var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "",
 	BasePath:         "/v1",
-	Schemes:          []string{},
+	Schemes:          []string{"http"},
 	Title:            "tarkib.uz back-end",
 	Description:      "Backend team - Nodirbek, Dostonbek",
 	InfoInstanceName: "swagger",

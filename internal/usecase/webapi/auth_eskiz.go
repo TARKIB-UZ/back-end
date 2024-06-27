@@ -80,7 +80,7 @@ func (a *AuthWebAPI) SendSMSWithAndroid(ctx context.Context, phoneNumber string,
 	url := "https://sms.uncgateway.com/api/send/sms"
 
 	if smsType == "register" {
-		message = "tarkib.uz dan ro'yxatdan o'tish uchun kod: " + code
+		message = "tarkib.uz dan ro'yxatdan o'tish kodi: " + code
 	} else if smsType == "verify" {
 		message = "tarkib.uz uchun qayta parol o'rnatish kodi: " + code
 	}
@@ -106,7 +106,7 @@ func (a *AuthWebAPI) SendSMSWithAndroid(ctx context.Context, phoneNumber string,
 
 	transport := &http.Transport{
 		TLSClientConfig: &tls.Config{
-			MinVersion: tls.VersionTLS12, // Adjust as per your server's TLS configuration
+			MinVersion: tls.VersionTLS12,
 		},
 	}
 

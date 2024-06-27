@@ -22,6 +22,13 @@ import (
 // @description Backend team - Nodirbek, Dostonbek
 // @version     1.0
 // @BasePath    /v1
+// @schemes     http
+// @security    BearerAuth
+// @Security    ApiKeyAuth
+// @securityDefinitions.apikey ApiKeyAuth
+// @SecurityScheme ApiKeyAuth API Key Authentication
+// @in header
+// @name X-API-Key
 func NewRouter(handler *gin.Engine, l logger.Interface, t usecase.Auth) {
 	// Options
 	handler.Use(gin.Logger())

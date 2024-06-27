@@ -6,4 +6,8 @@ CREATE TABLE IF NOT EXISTS users (
     nickname TEXT,
     password TEXT,
     avatar TEXT
+);
+
+CREATE TABLE IF NOT EXISTS recipes (
+    
 )

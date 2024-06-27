@@ -67,7 +67,7 @@ func (f *fileRoutes) upload(c *gin.Context) {
 	}
 
 	ext := filepath.Ext(file.File.Filename)
-	if ext != ".png" && ext != ".jpg" && ext != ".svg" && ext != ".jpeg" {
+	if ext != ".png" && ext != ".jpg" && ext != ".svg" && ext != ".jpeg" && ext != ".JPG" {
 		c.JSON(http.StatusBadRequest, "Bad request of file image")
 		log.Println("Bad request of file image")
 		return

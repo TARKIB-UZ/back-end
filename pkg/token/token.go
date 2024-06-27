@@ -48,7 +48,7 @@ func (jwtHandler *JWTHandler) GenerateAuthJWT() (access, refresh string, err err
 	refreshToken = jwt.New(jwt.SigningMethodHS256)
 	claims = accessToken.Claims.(jwt.MapClaims)
 	claims["sub"] = jwtHandler.Sub
-	claims["exp"] = time.Now().Add(time.Minute * time.Duration(jwtHandler.Timeout)).Unix()
+	claims["exp"] = jwtHandler.Exp
 	claims["iat"] = time.Now().Unix()
 	claims["role"] = jwtHandler.Role
 	claims["aud"] = jwtHandler.Aud

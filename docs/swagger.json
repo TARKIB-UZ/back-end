@@ -1,4 +1,7 @@
 {
+    "schemes": [
+        "http"
+    ],
     "swagger": "2.0",
     "info": {
         "description": "Backend team - Nodirbek, Dostonbek",
@@ -22,6 +25,7 @@
                 ],
                 "summary": "Forgot Password",
                 "operationId": "forgot-password",
+                "deprecated": true,
                 "parameters": [
                     {
                         "description": "Phone number",
@@ -169,6 +173,7 @@
                 ],
                 "summary": "Reset Password",
                 "operationId": "reset-password",
+                "deprecated": true,
                 "parameters": [
                     {
                         "description": "Phone number, reset code, and new password",
@@ -298,28 +303,28 @@
         "entity.User": {
             "type": "object",
             "properties": {
-                "accessToken": {
+                "access_token": {
                     "type": "string"
                 },
                 "avatar": {
                     "type": "string"
                 },
-                "firstName": {
+                "first_name": {
                     "type": "string"
                 },
                 "id": {
                     "type": "string"
                 },
-                "lastName": {
+                "last_name": {
                     "type": "string"
                 },
-                "nickName": {
+                "nickname": {
                     "type": "string"
                 },
                 "password": {
                     "type": "string"
                 },
-                "phoneNumber": {
+                "phone_number": {
                     "type": "string"
                 }
             }
@@ -456,5 +461,20 @@
                 }
             }
         }
-    }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "X-API-Key",
+            "in": "header"
+        }
+    },
+    "security": [
+        {
+            "BearerAuth": []
+        },
+        {
+            "ApiKeyAuth": []
+        }
+    ]
 }

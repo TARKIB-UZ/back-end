@@ -137,6 +137,7 @@ func (r *authRoutes) verify(c *gin.Context) {
 // @Failure     400 {object} response
 // @Failure     500 {object} response
 // @Router      /auth/forgot [post]
+// @Deprecated
 func (r *authRoutes) forgotPassword(c *gin.Context) {
 	var request models.ForgotPasswordRequest
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -174,6 +175,7 @@ func (r *authRoutes) forgotPassword(c *gin.Context) {
 // @Failure     400 {object} response
 // @Failure     500 {object} response
 // @Router      /auth/reset [post]
+// @Deprecated
 func (r *authRoutes) resetPassword(c *gin.Context) {
 	var request models.ResetPasswordRequest
 	if err := c.ShouldBindJSON(&request); err != nil {

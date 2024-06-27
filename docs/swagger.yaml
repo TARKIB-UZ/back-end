@@ -2,21 +2,21 @@ basePath: /v1
 definitions:
   entity.User:
     properties:
-      accessToken:
+      access_token:
         type: string
       avatar:
         type: string
-      firstName:
+      first_name:
         type: string
       id:
         type: string
-      lastName:
+      last_name:
         type: string
-      nickName:
+      nickname:
         type: string
       password:
         type: string
-      phoneNumber:
+      phone_number:
         type: string
     type: object
   models.ForgotPasswordRequest:
@@ -114,6 +114,7 @@ paths:
     post:
       consumes:
       - application/json
+      deprecated: true
       description: Initiates the password reset process by sending a reset code to
         the user's phone number.
       operationId: forgot-password
@@ -213,6 +214,7 @@ paths:
     post:
       consumes:
       - application/json
+      deprecated: true
       description: Resets the user's password using the provided reset code and new
         password.
       operationId: reset-password
@@ -301,4 +303,14 @@ paths:
       summary: Image upload
       tags:
       - file-upload
+schemes:
+- http
+security:
+- BearerAuth: []
+- ApiKeyAuth: []
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: X-API-Key
+    type: apiKey
 swagger: "2.0"

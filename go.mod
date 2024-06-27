@@ -1,6 +1,6 @@
 module tarkib.uz
 
-go 1.22.4
+go 1.22
 
 require (
 	github.com/Eun/go-hit v0.5.23
@@ -8,6 +8,7 @@ require (
 	github.com/casbin/casbin/v2 v2.97.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/evrone/go-clean-template v1.4.2
+	github.com/fogleman/gg v1.3.0
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-redis/redis/v8 v8.11.5
@@ -55,6 +56,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.20.0 // indirect
 	github.com/goccy/go-json v0.10.3 // indirect
+	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/gookit/color v1.4.2 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
@@ -97,6 +99,7 @@ require (
 	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
+	golang.org/x/image v0.18.0 // indirect
 	golang.org/x/net v0.26.0 // indirect
 	golang.org/x/sys v0.21.0 // indirect
 	golang.org/x/text v0.16.0 // indirect

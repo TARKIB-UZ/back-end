@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS history;
+DROP TABLE IF EXISTS users;

@@ -1,48 +1,83 @@
+version: '3.8'
+
 services:
   postgres:
     container_name: postgres
     image: postgres
     networks:
-      - tarkib
+      tarkib:
+        aliases:
+          - postgres
     volumes:
       - pg-data:/var/lib/postgresql/data
     env_file: .env  
     ports:
-      - 5432:5432
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   redis:
     image: redis:latest
     container_name: redis
     networks:
-      - tarkib
+      tarkib:
+        aliases:
+          - redis
     ports:
       - "6379:6379"
     env_file: .env  
     volumes:
-      - redis-data:/data
+      - redis-data:/data 
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   minio:
-    image: docker.io/bitnami/minio:2022
+    container_name: minio
+    image: bitnami/minio:2022
     networks:
-      - tarkib
+      tarkib:
+        aliases:
+          - minio
     ports:
-      - '9000:9000'
-      - '9001:9001'
+      - "9000:9000"
+      - "9001:9001"
     env_file: .env
     volumes:
-      - 'minio-data:/data'
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   app:
     build: .
     container_name: app
+    image: app:latest
     networks:
-      - tarkib
-    image: app
+      tarkib:
+        aliases:
+          - app
     ports:
-      - 8080:8080
+      - "8080:8080"
     env_file: .env  
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgres://$${POSTGRES_USER}:$${POSTGRES_PASSWORD}@postgres:5432/$${POSTGRES_DB}
+      - REDIS_URL=redis://redis:6379
+      - MINIO_URL=http://minio:9000
 
 networks:
   tarkib:
