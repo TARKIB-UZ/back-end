@@ -257,7 +257,7 @@ func (uc *AuthUseCase) Verify(ctx context.Context, request entity.VerifyUser) (*
 		PhoneNumber: userForRedis.PhoneNumber,
 		NickName:    userForRedis.NickName,
 		Password:    userForRedis.Password,
-		Avatar:      userForRedis.Avatar,
+		Avatar:      fmt.Sprintf("https://%s/%s/%s", endpoint, "avatars", avatarImage),
 		AccessToken: access,
 	}, nil
 }
