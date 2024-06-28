@@ -9,6 +9,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/k0kubun/pp"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 
 	"tarkib.uz/config"
 	v1 "tarkib.uz/internal/controller/http/v1"
@@ -38,12 +40,24 @@ func Run(cfg *config.Config) {
 		l.Fatal(fmt.Errorf("app - Run - redis.New: %w", err))
 	}
 
+	endpoint := os.Getenv("SERVER_IP")
+	accessKeyID := "nodirbek"
+	secretAccessKey := "nodirbek"
+	minioClient, err := minio.New(endpoint, &minio.Options{
+		Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+		Secure: false,
+	})
+	if err != nil {
+		l.Fatal(fmt.Errorf("app - Run - minio.New"))
+	}
+
 	// Use case
 	authUseCase := usecase.NewAuthUseCase(
 		repo.NewAuthRepo(pg),
 		webapi.NewAuthWebAPI(cfg),
 		cfg,
 		RedisClient,
+		minioClient,
 	)
 
 	// HTTP Server

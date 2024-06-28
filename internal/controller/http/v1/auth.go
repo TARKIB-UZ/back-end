@@ -49,6 +49,7 @@ func (r *authRoutes) register(c *gin.Context) {
 		return
 	}
 
+
 	err := r.t.Register(
 		c.Request.Context(),
 		&entity.User{

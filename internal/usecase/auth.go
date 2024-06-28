@@ -15,9 +15,11 @@ import (
 
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
+	"github.com/minio/minio-go/v7"
 	"tarkib.uz/config"
 	"tarkib.uz/internal/entity"
 	avatargenerator "tarkib.uz/pkg/avatar-generator"
+	avatar "tarkib.uz/pkg/base64-image"
 	"tarkib.uz/pkg/password"
 	tokens "tarkib.uz/pkg/token"
 )
@@ -27,14 +29,16 @@ type AuthUseCase struct {
 	webAPI      AuthWebAPI
 	cfg         *config.Config
 	RedisClient *redis.Client
+	MinioClient *minio.Client
 }
 
-func NewAuthUseCase(r AuthRepo, w AuthWebAPI, cfg *config.Config, RedisClient *redis.Client) *AuthUseCase {
+func NewAuthUseCase(r AuthRepo, w AuthWebAPI, cfg *config.Config, RedisClient *redis.Client, minioClient *minio.Client) *AuthUseCase {
 	return &AuthUseCase{
 		repo:        r,
 		webAPI:      w,
 		cfg:         cfg,
 		RedisClient: RedisClient,
+		MinioClient: minioClient,
 	}
 }
 
@@ -205,6 +209,10 @@ func (uc *AuthUseCase) Verify(ctx context.Context, request entity.VerifyUser) (*
 
 	if userForRedis.Code != request.Code {
 		return nil, errors.New("invalid verification code")
+	}
+
+	if err := avatar.SaveAvatar(userForRedis.Avatar, uuid.NewString(), uc.MinioClient); err != nil {
+		return nil, err
 	}
 
 	jwtHandler := tokens.JWTHandler{
