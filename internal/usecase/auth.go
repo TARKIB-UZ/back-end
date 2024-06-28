@@ -211,7 +211,7 @@ func (uc *AuthUseCase) Verify(ctx context.Context, request entity.VerifyUser) (*
 		return nil, errors.New("invalid verification code")
 	}
 
-	if err := avatar.SaveAvatar(userForRedis.Avatar, uuid.NewString(), uc.MinioClient); err != nil {
+	if err := avatar.SaveAvatar(userForRedis.Avatar, uuid.NewString()+".png", uc.MinioClient); err != nil {
 		return nil, err
 	}
 
