@@ -193,6 +193,7 @@ func (uc *AuthUseCase) Verify(ctx context.Context, request entity.VerifyUser) (*
 	var (
 		userForRedis entity.UserForRedis
 	)
+	endpoint := os.Getenv("SERVER_IP")
 	data := uc.RedisClient.Get(ctx, request.PhoneNumber)
 	if data.Err() != nil {
 		return nil, data.Err()
@@ -211,7 +212,8 @@ func (uc *AuthUseCase) Verify(ctx context.Context, request entity.VerifyUser) (*
 		return nil, errors.New("invalid verification code")
 	}
 
-	if err := avatar.SaveAvatar(userForRedis.Avatar, uuid.NewString()+".png", uc.MinioClient); err != nil {
+	avatarImage := uuid.NewString() + ".png"
+	if err := avatar.SaveAvatar(userForRedis.Avatar, avatarImage, uc.MinioClient); err != nil {
 		return nil, err
 	}
 
@@ -241,7 +243,7 @@ func (uc *AuthUseCase) Verify(ctx context.Context, request entity.VerifyUser) (*
 		PhoneNumber: userForRedis.PhoneNumber,
 		NickName:    userForRedis.NickName,
 		Password:    hashedPassword,
-		Avatar:      userForRedis.Avatar,
+		Avatar:      fmt.Sprintf("https://%s/%s/%s", endpoint, "avatars", avatarImage),
 		AccessToken: access,
 	})
 	if err != nil {
